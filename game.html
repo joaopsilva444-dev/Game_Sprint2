@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco de Dados: Desafio SQL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Painel de ajuda à esquerda */
+        .help-panel {
+            width: 280px;
+            background-color: #f9f9ff;
+            border-right: 2px solid #e0e0ff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .help-panel h3 {
+            color: #4a6fa5;
+            margin-top: 0;
+            font-size: 1.2em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            width: 100%;
+        }
+
+        .help-panel p {
+            font-size: 1em;
+            line-height: 1.5;
+            color: #333;
+            text-align: left;
+        }
+
+        /* Área principal do jogo */
+        .game-area-wrapper {
+            flex: 1;
+            margin-left: 300px;
+            padding: 20px;
+            max-width: calc(100% - 320px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .question-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .question-number {
+            font-size: 0.95em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .option {
+            padding: 14px;
+            background: #f1f8ff;
+            border: 2px solid #d1e7ff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            background: #bbdefb;
+            border-color: #64b5f6;
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .feedback {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f0f8ff;
+            border-left: 4px solid #4a90e2;
+            font-size: 0.95em;
+            color: #333;
+            border-radius: 0 6px 6px 0;
+            display: none;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        #next-btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+        }
+
+        #next-btn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+
+        #next-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .db-icon {
+            font-size: 4em;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .final-score {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 25px;
+        }
+
+        #restart-btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+        }
+
+        #restart-btn:hover {
+            background: #27ae60;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .help-panel {
+                display: none;
+            }
+            .game-area-wrapper {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 15px;
+            }
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Painel de Ajuda -->
+        <div class="help-panel" id="help-panel">
+            <h3>Dica da Pergunta</h3>
+            <p id="help-text">Selecione uma opção para continuar.</p>
+        </div>
+
+        <!-- Área do Jogo -->
+        <div class="game-area-wrapper">
+            <header>
+                <h1><i class="fas fa-database"></i> Banco de Dados: Desafio SQL</h1>
+                <p class="subtitle">Teste seus conhecimentos sobre bancos de dados relacionais e SQL</p>
+                
+                <div class="game-info">
+                    <div class="info-item">
+                        <div class="info-value" id="score">0</div>
+                        <div class="info-label">Pontos</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="question-count">1/10</div>
+                        <div class="info-label">Pergunta</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="time">60s</div>
+                        <div class="info-label">Tempo</div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="game-area">
+                <div class="question-container">
+                    <div class="question-number">Pergunta <span id="current-question">1</span></div>
+                    <div class="question-text" id="question-text">
+                        Qual comando SQL é usado para recuperar dados de um banco de dados?
+                    </div>
+                    <div class="code-block" id="code-block" style="display: none;"></div>
+                    
+                    <div class="options-container">
+                        <div class="option" data-option="A">A) UPDATE</div>
+                        <div class="option" data-option="B">B) INSERT</div>
+                        <div class="option" data-option="C">C) SELECT</div>
+                        <div class="option" data-option="D">D) DELETE</div>
+                    </div>
+                    
+                    <div class="feedback" id="feedback"></div>
+                    <div class="explanation" id="explanation"></div>
+                </div>
+                
+                <div class="controls">
+                    <button id="next-btn"><i class="fas fa-arrow-right"></i> Próxima</button>
+                </div>
+                
+                <div class="result-screen" id="result-screen">
+                    <div class="db-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="message" id="result-message">Parabéns! Você completou o desafio!</div>
+                    <div class="final-score" id="final-score">0</div>
+                    <button id="restart-btn"><i class="fas fa-redo"></i> Jogar Novamente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Qual comando SQL é usado para recuperar dados de um banco de dados?",
+                options: ["UPDATE", "INSERT", "SELECT", "DELETE"],
+                answer: 2,
+                type: "text",
+                explanation: "O comando SELECT é usado para consultar e recuperar dados de uma ou mais tabelas em um banco de dados relacional.",
+                helpText: "Ele permite especificar quais colunas e linhas de uma ou mais tabelas você deseja ver, sendo essencial para consultas e para trabalhar com os dados armazenados. "
+            },
+            {
+                question: "Qual é a cláusula usada para filtrar registros em uma consulta SQL?",
+                options: ["FILTER", "WHERE", "HAVING", "CONDITION"],
+                answer: 1,
+                type: "text",
+                explanation: "A cláusula WHERE filtra os registros com base em uma condição específica. Ela é aplicada antes do agrupamento (GROUP BY).",
+                helpText: "Use esta cláusula após o nome da tabela para selecionar apenas linhas que atendam a uma condição."
+            },
+            {
+                question: "Analise o seguinte comando SQL:",
+                code: "SELECT nome, email FROM usuarios WHERE idade > 18;",
+                question2: "O que este comando faz?",
+                options: [
+                    "Seleciona todos os campos da tabela usuarios",
+                    "Seleciona nome e email de usuários com mais de 18 anos",
+                    "Atualiza o email dos usuários maiores de 18 anos",
+                    "Deleta usuários com menos de 18 anos"
+                ],
+                answer: 1,
+                type: "code",
+                explanation: "Este comando seleciona apenas as colunas 'nome' e 'email' da tabela 'usuarios', mas somente para registros onde a idade é maior que 18 anos.",
+                helpText: "Lembre-se: SELECT escolhe colunas, WHERE filtra linhas. Aqui, só usuários com idade > 18 são listados."
+            },
+            {
+                question: "Qual comando SQL é usado para adicionar um novo registro a uma tabela?",
+                options: ["ADD", "INSERT INTO", "CREATE", "APPEND"],
+                answer: 1,
+                type: "text",
+                explanation: "O comando INSERT INTO é usado para inserir novos registros (linhas) em uma tabela existente.",
+                helpText: "Este comando adiciona uma nova linha à tabela. A estrutura básica é: INSERT INTO tabela (colunas) VALUES (valores)."
+            },
+            {
+                question: "Qual é a chave primária (Primary Key) em um banco de dados relacional?",
+                options: [
+                    "Um campo que pode conter valores duplicados",
+                    "Um campo que referencia outra tabela",
+                    "Um campo único que identifica cada registro de forma exclusiva",
+                    "Um campo que armazena senhas criptografadas"
+                ],
+                answer: 2,
+                type: "text",
+                explanation: "A chave primária garante que cada registro em uma tabela seja único e não nulo. É essencial para identificar linhas de forma confiável.",
+                helpText: "Ela deve ser única e não pode ser nula. É como o CPF de uma pessoa em um sistema de cadastro."
+            },
+            {
+                question: "Analise o seguinte comando SQL:",
+                code: "UPDATE produtos SET preco = preco * 1.1 WHERE categoria = 'eletronicos';",
+                question2: "O que este comando faz?",
+                options: [
+                    "Aumenta em 10% o preço dos produtos eletrônicos",
+                    "Define o preço de todos os produtos como 1.1",
+                    "Cria uma nova categoria chamada 'eletronicos'",
+                    "Remove 10% do preço dos produtos eletrônicos"
+                ],
+                answer: 0,
+                type: "code",
+                explanation: "O comando multiplica o preço atual por 1.1 (equivalente a um aumento de 10%) apenas para produtos na categoria 'eletronicos'.",
+                helpText: "UPDATE modifica dados existentes. Aqui, apenas produtos da categoria 'eletronicos' têm seu preço aumentado em 10%."
+            },
+            {
+                question: "Qual é a finalidade da cláusula JOIN em SQL?",
+                options: [
+                    "Combinar linhas de duas ou mais tabelas com base em uma coluna relacionada",
+                    "Excluir registros duplicados de uma tabela",
+                    "Ordenar os resultados de uma consulta",
+                    "Criar uma nova tabela a partir de outra"
+                ],
+                answer: 0,
+                type: "text",
+                explanation: "JOIN é usado para combinar dados de duas ou mais tabelas com base em uma coluna comum (como uma chave estrangeira).",
+                helpText: "JOIN conecta tabelas usando colunas relacionadas, como ID de cliente em 'pedidos' e 'clientes'."
+            },
+            {
+                question: "O que representa o conceito de 'normalização' em bancos de dados?",
+                options: [
+                    "O processo de converter dados em um formato padrão",
+                    "A técnica de organizar dados para reduzir redundâncias e dependências",
+                    "A criação de backups automáticos do banco de dados",
+                    "A criptografia de dados sensíveis no banco"
+                ],
+                answer: 1,
+                type: "text",
+                explanation: "A normalização elimina redundâncias e evita anomalias de atualização, inserção e exclusão, organizando os dados em tabelas bem estruturadas.",
+                helpText: "É um processo de design que evita repetição de dados e mantém a integridade do banco."
+            },
+            {
+                question: "Analise o seguinte comando SQL:",
+                code: "DELETE FROM pedidos WHERE data < '2020-01-01';",
+                question2: "O que este comando faz?",
+                options: [
+                    "Remove todos os pedidos feitos antes de 2020",
+                    "Arquiva pedidos antigos em outra tabela",
+                    "Atualiza a data dos pedidos antigos",
+                    "Seleciona pedidos feitos antes de 2020"
+                ],
+                answer: 0,
+                type: "code",
+                explanation: "O comando DELETE remove permanentemente os registros da tabela 'pedidos' cuja data seja anterior a 1º de janeiro de 2020.",
+                helpText: "DELETE remove linhas permanentemente. Sem WHERE, apagaria toda a tabela!"
+            },
+            {
+                question: "Qual é a diferença entre DELETE e TRUNCATE em SQL?",
+                options: [
+                    "DELETE remove a tabela inteira, TRUNCATE remove apenas os dados",
+                    "TRUNCATE é mais lento que DELETE para grandes volumes de dados",
+                    "DELETE remove registros um por um e pode ser revertido, TRUNCATE remove todos os dados rapidamente e não pode ser revertido",
+                    "Não há diferença, ambos fazem a mesma coisa"
+                ],
+                answer: 2,
+                type: "text",
+                explanation: "DELETE remove linhas com base em uma condição e pode ser desfeito (com ROLLBACK em transações). TRUNCATE remove todos os dados da tabela de forma rápida e irreversível, sem registrar cada exclusão individualmente.",
+                helpText: "DELETE é mais seguro (permite rollback), TRUNCATE é mais rápido, mas não pode ser desfeito."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+        let gameActive = true;
+        let timer;
+        let timeLeft = 60;
+
+        const questionText = document.getElementById('question-text');
+        const codeBlock = document.getElementById('code-block');
+        const options = document.querySelectorAll('.option');
+        const feedback = document.getElementById('feedback');
+        const explanationEl = document.getElementById('explanation');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreDisplay = document.getElementById('score');
+        const questionCount = document.getElementById('question-count');
+        const currentQuestionDisplay = document.getElementById('current-question');
+        const timeDisplay = document.getElementById('time');
+        const resultScreen = document.getElementById('result-screen');
+        const finalScore = document.getElementById('final-score');
+        const resultMessage = document.getElementById('result-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const helpTextEl = document.getElementById('help-text');
+
+        function initGame() {
+            currentQuestion = 0;
+            score = 0;
+            gameActive = true;
+            timeLeft = 60;
+            updateScore();
+            showQuestion();
+            startTimer();
+            resultScreen.style.display = 'none';
+            nextBtn.style.display = 'inline-flex';
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                endGame();
+                return;
+            }
+            
+            const q = questions[currentQuestion];
+            currentQuestionDisplay.textContent = currentQuestion + 1;
+            questionCount.textContent = `${currentQuestion + 1}/${questions.length}`;
+            
+            // Atualiza o painel de ajuda
+            helpTextEl.textContent = q.helpText || "Dica disponível para esta pergunta.";
+            
+            if (q.type === "code") {
+                questionText.innerHTML = `${q.question}<br><br>${q.question2}`;
+                codeBlock.textContent = q.code;
+                codeBlock.style.display = 'block';
+            } else {
+                questionText.textContent = q.question;
+                codeBlock.style.display = 'none';
+            }
+            
+            options.forEach((option, index) => {
+                option.textContent = `${String.fromCharCode(65 + index)}) ${q.options[index]}`;
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.style.pointerEvents = 'auto';
+            });
+            
+            selectedOption = null;
+            feedback.style.display = 'none';
+            explanationEl.style.display = 'none';
+            nextBtn.disabled = true;
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (!gameActive) return;
+            
+            const q = questions[currentQuestion];
+            const isCorrect = selectedIndex === q.answer;
+            
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === q.answer) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            if (isCorrect) {
+                score += 10;
+                updateScore();
+                feedback.textContent = "Correto! Ótima resposta!";
+                feedback.className = "feedback correct";
+            } else {
+                feedback.textContent = `Incorreto! A resposta correta era: ${q.options[q.answer]}`;
+                feedback.className = "feedback incorrect";
+            }
+            
+            explanationEl.textContent = q.explanation;
+            explanationEl.style.display = 'block';
+            feedback.style.display = 'block';
+            nextBtn.disabled = false;
+        }
+
+        function updateScore() {
+            scoreDisplay.textContent = score;
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timeDisplay.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            gameActive = false;
+            feedback.textContent = "Tempo esgotado!";
+            feedback.className = "feedback incorrect";
+            feedback.style.display = 'block';
+            
+            const q = questions[currentQuestion];
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === q.answer) {
+                    option.classList.add('correct');
+                }
+            });
+            
+            explanationEl.textContent = q.explanation;
+            explanationEl.style.display = 'block';
+            nextBtn.disabled = false;
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            gameActive = false;
+            resultScreen.style.display = 'block';
+            finalScore.textContent = score;
+            
+            if (score >= 80) {
+                resultMessage.textContent = "Mestre do SQL! Excelente desempenho!";
+            } else if (score >= 60) {
+                resultMessage.textContent = "Ótimo trabalho! Você conhece bem bancos de dados!";
+            } else if (score >= 40) {
+                resultMessage.textContent = "Bom esforço! Continue estudando!";
+            } else {
+                resultMessage.textContent = "Precisa estudar mais! Não desista!";
+            }
+            
+            nextBtn.style.display = 'none';
+        }
+
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                if (selectedOption !== null || !gameActive) return;
+                selectedOption = option.dataset.option;
+                const selectedIndex = Array.from(options).indexOf(option);
+                checkAnswer(selectedIndex);
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                timeLeft = 60;
+                timeDisplay.textContent = `${timeLeft}s`;
+                startTimer();
+                showQuestion();
+            } else {
+                endGame();
+            }
+        });
+
+        restartBtn.addEventListener('click', initGame);
+
+        initGame();
+    </script>
+</body>
+</html>
